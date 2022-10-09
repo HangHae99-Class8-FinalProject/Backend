@@ -42,7 +42,11 @@ sequelize
     console.error(err);
   });
 
-app.use(helmet());
+
+app.use(helmet.frameguard());
+app.use(helmet.hidePoweredBy());
+app.use(helmet.hsts());
+app.use(helmet.xssFilter());
 
 app.use(
   cors({
@@ -55,8 +59,7 @@ app.use(
     ],
   })
 );
-//테스트
-// app.use("/api/swagger", swaggerUi.serve, swaggerUi.setup(swaggerFile));//swagger app.js 세팅
+
 app.use(morgan(morganFormat, { stream: logger.stream })); // morgan 로그 설정
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json()); // body로 들어오는 json 형태의 데이터를 파싱해준다.

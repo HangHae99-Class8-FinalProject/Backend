@@ -14,13 +14,18 @@ class CommentRepository {
       nickname,
       image,
     });
-    const getPost = await Post.findOne({ where: { postId } });
-    const commentNum = getPost.commentNum + 1;
+    /*
+    댓글 작성될 때 마다 Post 테이블의 commentNum 속성 값 증가 (댓글 갯수)
+    */ 
+    const increase = await Post.findOne({ where: { postId } });
+    const commentNum = increase.commentNum + 1;
     await Post.update({ commentNum }, { where: { postId } });
     return createComment;
   };
   //Repo 특정 게시글의 전체댓글 postId조회
-  
+  /*
+  조회시 마다 댓글 수를 5개씩 끊어서 보여줌  
+  */
   findinPostid = async (postId, pagenum) => {
     let offset = 0;
     if (pagenum > 1) {
@@ -43,9 +48,13 @@ class CommentRepository {
     return await Comment.update({ comment }, { where: { userId, commentId } });
   };
   //Repo 특정 게시글에 댓글 삭제
+  
   deleteComment = async (userId, commentId) => {
     const getComment = await Comment.findOne({ where: { commentId } });
     const getPostId = getComment.postId;
+  /*
+  댓글 삭제시 Post 테이블의 commentNum 속상 값 감소
+  */
     const getPost = await Post.findOne({ where: { postId: getPostId } });
     const commentNum = getPost.commentNum - 1;
     await Post.update({ commentNum }, { where: { postId: getPostId } });
@@ -65,8 +74,8 @@ class CommentRepository {
     nickname,
     image
   ) => {
-    const test = await Comment.findOne({ where: { commentId } });
-    const recommentNum = test.recommentNum + 1;
+    const increase = await Comment.findOne({ where: { commentId } });
+    const recommentNum = increase.recommentNum + 1;
     await Comment.update({ recommentNum }, { where: { commentId } });
 
     return await ReComment.create({
@@ -109,8 +118,8 @@ class CommentRepository {
   };
   //Repo 특정 대댓글 삭제
   deleteRecomment = async (userId, commentId, recommentId) => {
-    const test = await Comment.findOne({ where: { commentId } });
-    const recommentNum = test.recommentNum - 1;
+    const decrease = await Comment.findOne({ where: { commentId } });
+    const recommentNum = decrease.recommentNum - 1;
     await Comment.update({ recommentNum }, { where: { commentId } });
 
     return await ReComment.destroy({
