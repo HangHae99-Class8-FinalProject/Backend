@@ -16,7 +16,7 @@ const day = require("../node-scheduler");
 
 // redis 연결
 const redis = require("redis");
-const { log } = require("winston");
+
 const redisClient = redis.createClient({
   url: `redis://${process.env.REDIS_USERNAME}:${process.env.REDIS_PASSWORD}@${process.env.REDIS_HOST}:${process.env.REDIS_PORT}/0`,
   legacyMode: true,
@@ -66,7 +66,7 @@ class UserRepositiory {
     }
   };
   //유저의 닉네임을 받아 해당 닉네임을 가진 유저가 작성한 게시글을 리턴하는 함수
-  getUserPost = async (nickname, pagenum, userId) => {
+  getUserPost = async (nickname, pagenum) => {
     let offset = 0;
 
     if (pagenum > 1) {
@@ -228,43 +228,37 @@ class UserRepositiory {
   };
   //유저아이디를 받아 해당 유저를 회원탈퇴시키는 함수
   deleteUser = async (userId) => {
-    let arr = [];
-    let arr2 = [];
+    let postIdArr = [];
+
     const userComment = await Comment.findAll({ where: { userId } });
-    const userRecomment = await ReComment.findAll({ where: { userId } });
+
     for (let i = 0; i < userComment.length; i++) {
       let getpostId = await Post.findOne({
         where: { postId: userComment[i].postId },
       });
-      arr.push(getpostId.postId);
+      postIdArr.push(getpostId.postId);
     }
 
+    const postArr = [...new Set(postIdArr)];
+    let cnt = 0;
+    for (let i = 0; i < postArr.length; i++) {
+      const getPostId = await Post.findOne({ where: { postId: postArr[i] } });
+
+      cnt += 1;
+      await Post.update(
+        { commentNum: getPostId.commentNum - cnt },
+        { where: { postId: postArr[i] } }
+      );
+    }
+
+    let arr2 = [];
+    const userRecomment = await ReComment.findAll({ where: { userId } });
     for (let i = 0; i < userRecomment.length; i++) {
       let getCommentId = await Comment.findOne({
         where: { commentId: userRecomment[i].commentId },
       });
       arr2.push(getCommentId.commentId);
     }
-
-    const post = [...new Set(arr)]; //3 ,4
-
-    for (let i = 0; i < post.length; i++) {
-      const getPostId = await Post.findOne({ where: { postId: post[i] } });
-
-      let cnt = 0;
-
-      for (let i = 0; i < arr.length; i++) {
-        if (arr[i] === getPostId.postId) {
-          cnt += 1;
-        }
-      }
-
-      await Post.update(
-        { commentNum: getPostId.commentNum - cnt },
-        { where: { postId: post[i] } }
-      );
-    }
-
     const comments = [...new Set(arr2)];
     for (let i = 0; i < comments.length; i++) {
       const getCommentId = await Comment.findOne({

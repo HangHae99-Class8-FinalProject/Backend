@@ -1,4 +1,4 @@
-const { Post } = require("../models");
+const { Post, Record } = require("../models");
 const { Like } = require("../models");
 const { Hashtag } = require("../models");
 
@@ -6,7 +6,7 @@ const help = require("korean-regexp");
 const Sequelize = require("sequelize");
 const Op = Sequelize.Op;
 const test = require("../node-mailer");
-const Buffer = require("Buffer");
+
 class PostRepository {
   emailService = new test();
   //content,time,distance,path,image,hashtag,userId,nickname,profile등을 받아 게시글을 생성하는 함수
@@ -38,7 +38,6 @@ class PostRepository {
   };
   //페이지넘버를 받아 오프셋을 기준으로 5개씩 최신순으로 게시글을 리턴하는 함수
   getAllPosts = async (pagenum) => {
-    await Post.destroy({ where: { postId: 10 } });
     let offset = 0;
     if (pagenum > 1) {
       offset = 5 * (pagenum - 1);
